@@ -5,6 +5,7 @@
 #include <QBoxLayout>
 #include "resultswidget.h"
 #include "matrixinputwidget.h"
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,7 +21,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+    void onCalculateButtonClicked();
+
 private slots:
+    void computeDeterminant();
 
 private:
     Ui::MainWindow *ui;

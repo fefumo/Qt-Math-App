@@ -2,6 +2,7 @@
 #include "./ui_mainwindow.h"
 #include <QSpinBox>
 #include <QSplitter>
+#include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,37 +10,60 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    qDebug() << "starting application";
+
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    //create main horizontal
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
 
-    //left side
+    QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
+
+    // Left side (Matrix input widget)
+    QWidget *leftWidget = new QWidget(this);
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftWidget);
     matrixInputWidget = new MatrixInputWidget(this);
-    mainLayout->addWidget(matrixInputWidget);
 
-    //right side
+    QLabel *label = new QLabel("Matrix size: ", this);
+
+
+    QPushButton *calculateButton = new QPushButton("Calculate Determinant", this);
+
+    leftLayout->addWidget(matrixInputWidget);
+    leftLayout->addWidget(label);
+    leftLayout->addWidget(calculateButton);
+
+    // Right side (Results widget)
+    QWidget *rightWidget = new QWidget(this);
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
     resultsWidget = new ResultsWidget(this);
-    mainLayout->addWidget(resultsWidget);
+    rightLayout->addWidget(resultsWidget);
 
-    //make them even
-    //mainLayout->setStretch(0,1);
-    //mainLayout->setStretch(1,1);
+    splitter->addWidget(leftWidget);
+    splitter->addWidget(rightWidget);
 
-    QSplitter *splitter = new QSplitter(Qt::Horizontal);
-    splitter->addWidget(matrixInputWidget);
-    splitter->addWidget(resultsWidget);
     mainLayout->addWidget(splitter);
 
     splitter->setStyleSheet("QSplitter::handle { background-color: #b0b0b0; }");
 
+    qDebug() << "initiated every widget. waiting for user actions...";
 
-    //setCentralWidget(splitter);
-
+    connect(calculateButton, SIGNAL(clicked()), this, SLOT(onCalculateButtonClicked()));
 }
+
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+
+void MainWindow::computeDeterminant(){
+    QVector<QVector<QLineEdit*>> matrix = matrixInputWidget->getMatrix();
+    double determinant = matrixInputWidget->readValuesAndFindDeterminant(matrix, matrixInputWidget->getSize());
+    resultsWidget->setDeterminant(determinant);
+}
+
+void MainWindow::onCalculateButtonClicked() {
+    computeDeterminant();
 }

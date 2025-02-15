@@ -18,3 +18,7 @@ ResultsWidget::ResultsWidget(QWidget *parent)
 void ResultsWidget::setResultText(const QString& text){
     resultBox->setText(text);
 }
+
+void ResultsWidget::setDeterminant(double determinant) {
+    resultBox->setText(QString("Determinant: %1").arg(determinant));
+}

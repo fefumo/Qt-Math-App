@@ -18,6 +18,9 @@ private:
     QTextEdit *resultBox;
 
 signals:
+
+public slots:
+    void setDeterminant(double determinant);
 };
 
 #endif // RESULTSWIDGET_H

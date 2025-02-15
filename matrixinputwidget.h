@@ -13,7 +13,10 @@ class MatrixInputWidget : public QWidget
     Q_OBJECT
 public:
     explicit MatrixInputWidget(QWidget *parent = nullptr);
-       QVector<QVector<QLineEdit*>> getMatrixValues() const;
+    QVector<QVector<double>> getMatrixValues() const;
+    QVector<QVector<QLineEdit*>> getMatrix();
+    int getSize();
+    double readValuesAndFindDeterminant(QVector<QVector<QLineEdit*>>&, int);
 
 signals:
     void matrixSizeChanged(int);
@@ -24,7 +27,6 @@ private slots:
 private:
     QGridLayout *gridLayout;
     QSpinBox *sizeInput;
-    QLabel *titleBar;
     QVector<QVector<QLineEdit*>> matrixCells;
 };
 
