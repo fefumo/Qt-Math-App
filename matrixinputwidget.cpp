@@ -25,7 +25,7 @@ MatrixInputWidget::MatrixInputWidget(QWidget *parent)
 
 }
 
-void debugPrintDoubleArray(const QVector<QVector<double>> &m, int n) {
+ void MatrixInputWidget::debugPrintDoubleArray(const QVector<QVector<double>>m, int n) {
     qDebug() << "Printing array of size" << n << "x" << n << ":";
 
     for (int i = 0; i < n; i++) {
@@ -38,7 +38,7 @@ void debugPrintDoubleArray(const QVector<QVector<double>> &m, int n) {
 }
 
 
-int MatrixInputWidget::getSize(){
+int MatrixInputWidget::getMatrixSize(){
     return sizeInput->value();
 }
 
@@ -57,8 +57,6 @@ void MatrixInputWidget::changeMatrixSize(int size){
     // Clear and resize the matrixCells container for the new size
     matrixCells.clear();
     matrixCells.resize(size);
-
-
 
     for (int i = 0; i < size; i++){
         matrixCells[i].resize(size);
@@ -92,7 +90,7 @@ void getCofactor(QVector<QVector<double>>& mat, QVector<QVector<double>>& temp, 
         }
     }
     qDebug() << "temp matrix after getCofactor: ";
-    debugPrintDoubleArray(temp, temp.size());
+    MatrixInputWidget::debugPrintDoubleArray(temp, temp.size());
 }
 
 QVector<QVector<double>> convertToNumericMatrix(QVector<QVector<QLineEdit*>>& mat, int n)
@@ -106,7 +104,7 @@ QVector<QVector<double>> convertToNumericMatrix(QVector<QVector<QLineEdit*>>& ma
         }
     }
     qDebug() << "printing numericMatrix after converting:";
-    debugPrintDoubleArray(numericMatrix, n);
+    MatrixInputWidget::debugPrintDoubleArray(numericMatrix, n);
 
     return numericMatrix;
 }
@@ -117,9 +115,8 @@ QVector<QVector<double>> convertToNumericMatrix(QVector<QVector<QLineEdit*>>& ma
 double determinantOfMatrix(QVector<QVector<double>>& mat, int n)
 {
     qDebug() << "in determinantOfMatrix func, matrix:";
-    debugPrintDoubleArray(mat, n);
+    MatrixInputWidget::debugPrintDoubleArray(mat, n);
 
-    // Initialize result
     double D = 0;
 
     // Base case: if matrix contains a single element
@@ -169,5 +166,21 @@ QVector<QVector<double>> MatrixInputWidget::getMatrixValues() const {
         matrix.append(row);
     }
     return matrix;
+}
+
+void MatrixInputWidget::setMatrixValues(QVector<QVector<double>>& m) {
+    int size = m.size();
+    changeMatrixSize(size);
+
+    // After resizing, loop through the matrix and set each QLineEdit value
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            // Ensure the QLineEdit pointer exists at matrixCells[i][j]
+            QLineEdit* cell = matrixCells[i][j];
+
+            // Set the text of the QLineEdit to the value from the matrix
+            cell->setText(QString::number(m[i][j]));
+        }
+    }
 }
 

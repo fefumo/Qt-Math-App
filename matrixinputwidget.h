@@ -14,9 +14,11 @@ class MatrixInputWidget : public QWidget
 public:
     explicit MatrixInputWidget(QWidget *parent = nullptr);
     QVector<QVector<double>> getMatrixValues() const;
+    void setMatrixValues(QVector<QVector<double>>& m);
     QVector<QVector<QLineEdit*>> getMatrix();
-    int getSize();
+    int getMatrixSize();
     double readValuesAndFindDeterminant(QVector<QVector<QLineEdit*>>&, int);
+    static void debugPrintDoubleArray(const QVector<QVector<double>>, int);
 
 signals:
     void matrixSizeChanged(int);
