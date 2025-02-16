@@ -3,13 +3,19 @@
 
 #include <QMainWindow>
 #include <QBoxLayout>
-#include "matrixfilehandler.h"
-#include "resultswidget.h"
-#include "matrixinputwidget.h"
+#include <QInputDialog>
 #include <QDebug>
 #include <QFileDialog>
 #include <QString>
 #include <QMessageBox>
+#include <QSpinBox>
+#include <QSplitter>
+#include <QPushButton>
+
+#include "matrixfilehandler.h"
+#include "resultswidget.h"
+#include "matrixinputwidget.h"
+#include "matrixprocessor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,22 +30,22 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
-public slots:
-    void onCalculateButtonClicked();
+    ResultsWidget *resultsWidget;  // Made this public for MatrixProcessor to access
 
 private slots:
     void computeDeterminant();
-    void openFileDialog();  // Slot to open the file dialog
+    void openFileDialog();
+    void openEpsilonDialog();
 
 private:
     Ui::MainWindow *ui;
-    ResultsWidget *resultsWidget;
     MatrixInputWidget *matrixInputWidget;
     QString selectedFile;
     QMessageBox messageBox;
     MatrixFileHandler *matrixFileHandler;
     QLabel *fileLabel;
+    MatrixProcessor *matrixProcessor;
+    void setupLayouts();
 };
 
 #endif // MAINWINDOW_H

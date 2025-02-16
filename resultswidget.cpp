@@ -22,3 +22,22 @@ void ResultsWidget::setResultText(const QString& text){
 void ResultsWidget::setDeterminant(double determinant) {
     resultBox->setText(QString("Determinant: %1").arg(determinant));
 }
+
+void ResultsWidget::addText(const QString &text){
+    resultBox->append(text);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

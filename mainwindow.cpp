@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include <QSpinBox>
-#include <QSplitter>
-#include <QPushButton>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -11,6 +9,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     qDebug() << "starting application";
+
+    setupLayouts();
+}
+
+void MainWindow::setupLayouts(){
+    // Create MatrixProcessor and pass reference of MainWindow
+    matrixProcessor = new MatrixProcessor(*this);
 
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -26,14 +31,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     fileLabel = new QLabel("File Name: ", this);
 
-    QPushButton *calculateButton = new QPushButton("Calculate Determinant", this);
+    QPushButton *runJacobiButton = new QPushButton("Run Jacobe Method");
+
+    QPushButton *calculateDeterminantButton = new QPushButton("Calculate Determinant", this);
 
     QPushButton *selectFileButton = new QPushButton("Select File");
 
     leftLayout->addWidget(matrixInputWidget);
     leftLayout->addWidget(fileLabel);
-    leftLayout->addWidget(calculateButton);
+    leftLayout->addWidget(calculateDeterminantButton);
     leftLayout->addWidget(selectFileButton);
+    leftLayout->addWidget(runJacobiButton);
 
     // Right side (Results widget)
     QWidget *rightWidget = new QWidget(this);
@@ -47,31 +55,38 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(splitter);
 
     splitter->setStyleSheet("QSplitter::handle { background-color: #b0b0b0; }");
-    //this->setStyleSheet("background-color: black;");
 
     qDebug() << "initiated every widget. waiting for user actions...";
 
-    connect(calculateButton, SIGNAL(clicked()), this, SLOT(computeDeterminant()));
-
+    connect(calculateDeterminantButton, SIGNAL(clicked()), this, SLOT(computeDeterminant()));
     connect(selectFileButton, &QPushButton::clicked, this, &MainWindow::openFileDialog);
-
+    connect(runJacobiButton,&QPushButton::clicked, this, &MainWindow::openEpsilonDialog);
 }
-
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
 
+void MainWindow::openEpsilonDialog(){
+    qDebug() << "Opened epsilon dialog";
+
+    bool ok;
+    double epsilon = QInputDialog::getDouble(this, "Input Epsilon",
+                                             "Enter epsilon value:",
+                                             0.1, 0.0001, 1.0, 4, &ok);
+    if (ok) {
+        qDebug() << "Epsilon entered:" << epsilon;
+        matrixProcessor->runJacobiMethod(epsilon);
+    } else {
+        qDebug() << "Dialog canceled.";
+    }
+}
 
 void MainWindow::computeDeterminant(){
     QVector<QVector<QLineEdit*>> matrix = matrixInputWidget->getMatrix();
     double determinant = matrixInputWidget->readValuesAndFindDeterminant(matrix, matrixInputWidget->getMatrixSize());
     resultsWidget->setDeterminant(determinant);
-}
-
-void MainWindow::onCalculateButtonClicked() {
-    computeDeterminant();
 }
 
 void MainWindow::openFileDialog()
@@ -89,7 +104,7 @@ void MainWindow::openFileDialog()
             return;
         }
         // Update the QLabel or QLineEdit with the selected file path
-        fileLabel->setText(selectedFile);
+        fileLabel->setText("current matrix is loaded from this file: " + selectedFile);
 
         // Optionally, show a message or take any other action
         QMessageBox::information(this, tr("File Loaded"), tr("Matrix loaded successfully from file!"));

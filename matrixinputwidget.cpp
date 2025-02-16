@@ -12,7 +12,7 @@ MatrixInputWidget::MatrixInputWidget(QWidget *parent)
     sizeInput = new QSpinBox(this);
     sizeInput->setRange(2,20);
     sizeInput->setMinimum(1);
-    sizeInput->setMaximum(20);
+    sizeInput->setMaximum(21);
     sizeInput->setValue(2); // default size
 
     layout->addWidget(sizeInput);
@@ -183,4 +183,3 @@ void MatrixInputWidget::setMatrixValues(QVector<QVector<double>>& m) {
         }
     }
 }
-

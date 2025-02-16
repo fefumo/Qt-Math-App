@@ -26,6 +26,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         matrixinputwidget.h matrixinputwidget.cpp
         resultswidget.h resultswidget.cpp
         matrixfilehandler.h matrixfilehandler.cpp
+        matrixprocessor.h matrixprocessor.cpp
 
 
     )

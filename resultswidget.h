@@ -12,6 +12,7 @@ class ResultsWidget : public QWidget
 public:
     explicit ResultsWidget(QWidget *parent = nullptr);
     void setResultText(const QString & text);
+    void addText(const QString &text);
 
 private:
     QLabel *titleLabel;
