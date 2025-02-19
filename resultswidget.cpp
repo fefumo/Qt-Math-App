@@ -15,7 +15,7 @@ ResultsWidget::ResultsWidget(QWidget *parent)
     layout->addWidget(resultBox);
 }
 
-void ResultsWidget::setResultText(const QString& text){
+void ResultsWidget::setText(const QString& text){
     resultBox->setText(text);
 }
 

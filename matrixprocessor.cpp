@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <cmath>
 #include <QDebug>
+#include <QMessageBox>
 
 MatrixProcessor::MatrixProcessor(MainWindow &mainWindow, MatrixInputWidget &matrixInputWidget) :
     mainWindowRef(mainWindow),
@@ -9,7 +10,7 @@ MatrixProcessor::MatrixProcessor(MainWindow &mainWindow, MatrixInputWidget &matr
 {}
 
 void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
-    mainWindowRef.resultsWidget->addText("Running Jacobi method...");
+    mainWindowRef.resultsWidget->setText("Running Jacobi method...");
 
     // Retrieve matrix and RHS values
     QVector<QVector<double>> matrix = matrixWidgetRef.getMatrixValues();
@@ -17,7 +18,7 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
 
     // Ensure matrix is square and valid
     if (matrix.size() != matrixSize || rhs.size() != matrixSize) {
-        mainWindowRef.resultsWidget->setResultText("Matrix or RHS size mismatch.");
+        QMessageBox::critical(nullptr, "Matrix", "Matrix or RHS size mismatch.");
         return;
     }
 
@@ -26,6 +27,15 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
 
     // Ensure matrix is diagonally dominant
     makeDiagDominant(matrix, rhs, matrixSize);
+
+    // Verify if the matrix is diagonally dominant
+    if (!isDiagDominant(matrix, matrixSize)) {
+        qDebug() << "Warning: Could not make matrix diagonally dominant. Jacobi method may not converge.";
+        mainWindowRef.resultsWidget->addText("Could not make matrix diagonally dominant. Jacobi method may not converge.");
+        QMessageBox::critical(nullptr, "Diagonal", "Could not make matrix diagonally dominant. Jacobi method may not converge.");
+        return;
+    }
+
     qDebug() << "Diagonalised matrix:";
     matrixWidgetRef.debugPrintDoubleArray(matrix, matrix.size());
     mainWindowRef.resultsWidget->addText("The norm of the diagonal matrix is: " + QString::number(matrixNorm(matrix)));
@@ -40,7 +50,6 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
         "|  k  | x1^k   |  x2^k  | ...... | max diff |\n"
         "| --- | ------ | ------ | ------ | -------- |\n";
 
-    // Run the iteration loop
     while (error >= epsilon) {
         error = 0.0;
         double maxDiff = 0.0;
@@ -56,6 +65,12 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
             }
 
             newX[i] = sum / matrix[i][i];
+
+            // Check if the computed value is valid
+            if (!std::isfinite(newX[i])) {  // Check for NaN or Inf
+                mainWindowRef.resultsWidget->addText("Jacobi Method diverged. Unable to find a solution.");
+                return;
+            }
         }
 
         // Calculate the maximum difference between new and old x values
@@ -67,6 +82,13 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
 
         error = std::sqrt(error);  // Root sum squared error
         x = newX;  // Update the solution
+
+        // Check if the error is exploding (indicating divergence)
+        if (error > 1e9) {  // Large arbitrary threshold for divergence detection
+            mainWindowRef.resultsWidget->addText("Jacobi Method diverged. Error exceeded threshold.");
+            qWarning("method diverged");
+            return;
+        }
 
         // Append iteration results to the result table
         resultTable += "| " + QString::number(iteration) + "  | ";
@@ -84,6 +106,7 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
         qDebug() << "Iteration" << iteration << "Error" << error << "Max Diff" << maxDiff;
     }
 
+
     // Final result message
     QString result = "Jacobi Method Converged in " + QString::number(iteration) + " iterations.\n";
     for (int i = 0; i < matrixSize; ++i) {
@@ -94,7 +117,6 @@ void MatrixProcessor::runJacobiMethod(double epsilon, int matrixSize) {
     mainWindowRef.resultsWidget->addText(resultTable);
     mainWindowRef.resultsWidget->addText(result);
 }
-
 
 bool MatrixProcessor::isDiagDominant(QVector<QVector<double>>& m, int size) {
     for (int i = 0; i < size; i++) {
@@ -150,10 +172,6 @@ void MatrixProcessor::makeDiagDominant(QVector<QVector<double>>& m, QVector<doub
         }
     }
 
-    // Verify if the matrix is diagonally dominant
-    if (!isDiagDominant(m, size)) {
-        qDebug() << "Warning: Could not make matrix diagonally dominant. Jacobi method may not converge.";
-        mainWindowRef.resultsWidget->addText("Could not make matrix diagonally dominant. Jacobi method may not converge.");
-    }
+
 }
 

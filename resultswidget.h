@@ -11,7 +11,7 @@ class ResultsWidget : public QWidget
     Q_OBJECT
 public:
     explicit ResultsWidget(QWidget *parent = nullptr);
-    void setResultText(const QString & text);
+    void setText(const QString & text);
     void addText(const QString &text);
 
 private:
