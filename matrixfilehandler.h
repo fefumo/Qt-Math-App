@@ -8,8 +8,11 @@
 class MatrixFileHandler {
 public:
     MatrixFileHandler() = default;
-    void saveMatrixToFile(const QVector<QVector<double>>& matrix, const QString& filename);
-    QVector<QVector<double>> loadMatrixFromFile(const QString& filename);
+    void saveSystemToFile(const QVector<QVector<double>>& matrix,
+                                             const QVector<double>& rhs,
+                                             const QString& filename);
+    QPair<QVector<QVector<double>>, QVector<double>>
+                                                loadSystemFromFile(const QString& filename);
 };
 
 #endif // MATRIXFILEHANDLER_H

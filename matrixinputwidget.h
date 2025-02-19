@@ -13,13 +13,15 @@ class MatrixInputWidget : public QWidget
     Q_OBJECT
 public:
     explicit MatrixInputWidget(QWidget *parent = nullptr);
-    QVector<QVector<double>> getMatrixValues() const;
-    void setMatrixValues(QVector<QVector<double>>& m);
-    QVector<QVector<QLineEdit*>> getMatrix();
-    int getMatrixSize();
     double readValuesAndFindDeterminant(QVector<QVector<QLineEdit*>>&, int);
     static void debugPrintDoubleArray(const QVector<QVector<double>>, int);
 
+    void setMatrixValues(QVector<QVector<double>>&);
+    void setRHSValues(QVector<double>&);
+    QVector<QVector<double>> getMatrixValues() const;
+    int getMatrixSize();
+    QVector<QVector<QLineEdit*>> getMatrix();
+    QVector<double> getRHSValues() const;
 signals:
     void matrixSizeChanged(int);
 
@@ -30,6 +32,8 @@ private:
     QGridLayout *gridLayout;
     QSpinBox *sizeInput;
     QVector<QVector<QLineEdit*>> matrixCells;
+    QVector<QLineEdit*> rightSideCells;
+    QVector<QLabel*> equalSigns;  // Stores the "=" labels
 };
 
 #endif // MATRIXINPUTWIDGET_H

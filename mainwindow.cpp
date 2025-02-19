@@ -14,9 +14,6 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::setupLayouts(){
-    // Create MatrixProcessor and pass reference of MainWindow
-    matrixProcessor = new MatrixProcessor(*this);
-
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
@@ -29,12 +26,12 @@ void MainWindow::setupLayouts(){
     QVBoxLayout *leftLayout = new QVBoxLayout(leftWidget);
     matrixInputWidget = new MatrixInputWidget(this);
 
+    // Create MatrixProcessor and pass reference of MainWindow
+    matrixProcessor = new MatrixProcessor(*this, *matrixInputWidget);
+
     fileLabel = new QLabel("File Name: ", this);
-
     QPushButton *runJacobiButton = new QPushButton("Run Jacobe Method");
-
     QPushButton *calculateDeterminantButton = new QPushButton("Calculate Determinant", this);
-
     QPushButton *selectFileButton = new QPushButton("Select File");
 
     leftLayout->addWidget(matrixInputWidget);
@@ -77,7 +74,7 @@ void MainWindow::openEpsilonDialog(){
                                              0.1, 0.0001, 1.0, 4, &ok);
     if (ok) {
         qDebug() << "Epsilon entered:" << epsilon;
-        matrixProcessor->runJacobiMethod(epsilon);
+        matrixProcessor->runJacobiMethod(epsilon, matrixInputWidget->getMatrixSize());
     } else {
         qDebug() << "Dialog canceled.";
     }
@@ -97,20 +94,23 @@ void MainWindow::openFileDialog()
 
     if (!selectedFile.isEmpty()) {
         // Use MatrixFileHandler to load the matrix
-        QVector<QVector<double>> matrixData = matrixFileHandler->loadMatrixFromFile(selectedFile);
+        QPair<QVector<QVector<double>>, QVector<double>> systemData = matrixFileHandler->loadSystemFromFile(selectedFile);
+        QVector<QVector<double>> matrixData = systemData.first;
+        QVector<double> rhs = systemData.second;
 
-        if (matrixData.isEmpty()){
-            QMessageBox::critical(this, tr("Matrix"), tr("Matrix is invalid"));
+        if (matrixData.isEmpty() || rhs.isEmpty()){
+            QMessageBox::critical(this, tr("Equations"), tr("Equations are invalid"));
             return;
         }
+
         // Update the QLabel or QLineEdit with the selected file path
-        fileLabel->setText("current matrix is loaded from this file: " + selectedFile);
+        fileLabel->setText("Current system of equations is loaded from this file: " + selectedFile);
 
         // Optionally, show a message or take any other action
-        QMessageBox::information(this, tr("File Loaded"), tr("Matrix loaded successfully from file!"));
+        QMessageBox::information(this, tr("File Loaded"), tr("System loaded successfully from file!"));
 
-        // Update the UI with the loaded matrix data, for example:
+        // Update the UI with the loaded data, for example:
         matrixInputWidget->setMatrixValues(matrixData);
-
+        matrixInputWidget->setRHSValues(rhs);
     }
 }

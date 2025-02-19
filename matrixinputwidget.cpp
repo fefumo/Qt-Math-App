@@ -39,7 +39,7 @@ MatrixInputWidget::MatrixInputWidget(QWidget *parent)
 
 
 int MatrixInputWidget::getMatrixSize(){
-    return sizeInput->value();
+    return matrixCells.size();
 }
 
 QVector<QVector<QLineEdit*>> MatrixInputWidget::getMatrix(){
@@ -53,21 +53,51 @@ void MatrixInputWidget::changeMatrixSize(int size){
             delete cell;
         }
     }
+    for (QLineEdit *cell: rightSideCells){
+        gridLayout->removeWidget(cell);
+        delete cell;
+    }
+    for (QLabel *label : equalSigns) {
+        gridLayout->removeWidget(label);
+        delete label;
+    }
 
-    // Clear and resize the matrixCells container for the new size
+    // Clear and resize containers
     matrixCells.clear();
+    rightSideCells.clear();
+    equalSigns.clear();
     matrixCells.resize(size);
+    rightSideCells.resize(size);
+    equalSigns.resize(size);
 
-    for (int i = 0; i < size; i++){
+    for (int i = 0; i < size; i++) {
         matrixCells[i].resize(size);
-        for(int j = 0; j < size; j++){
+
+        for (int j = 0; j < size; j++) {
             QLineEdit *cell = new QLineEdit();
-            QDoubleValidator* validator = new QDoubleValidator(-10000.0, 10000.0, 2, this);  // Min, Max, Decimals
+            QDoubleValidator* validator = new QDoubleValidator(-10000.0, 10000.0, 2, this);
             cell->setValidator(validator);
 
-            gridLayout->addWidget(cell, i, j);  // Add the new cell to the grid layout
+            gridLayout->addWidget(cell, i, j);
             matrixCells[i][j] = cell;
         }
+
+        // Create a QLabel for the "=" sign (non-editable)
+        QLabel *equalSign = new QLabel("=");
+        equalSign->setAlignment(Qt::AlignCenter);
+        equalSign->setStyleSheet("font-weight: bold; font-size: 14px;");
+
+        gridLayout->addWidget(equalSign, i, size);
+        equalSigns[i] = equalSign;
+
+        // Create a separate QLineEdit for the RHS (after "=" sign)
+        QLineEdit *rhsCell = new QLineEdit(); // RHS = right-hand side
+        QDoubleValidator* rhsValidator = new QDoubleValidator(-10000.0, 10000.0, 2, this);
+        rhsCell->setValidator(rhsValidator);
+        rhsCell->setStyleSheet("background: lightgray; color: black;");
+
+        gridLayout->addWidget(rhsCell, i, size + 1);  // Place RHS in the column after "="
+        rightSideCells[i] = rhsCell;
     }
 
     emit matrixSizeChanged(size);
@@ -93,22 +123,7 @@ void getCofactor(QVector<QVector<double>>& mat, QVector<QVector<double>>& temp, 
     MatrixInputWidget::debugPrintDoubleArray(temp, temp.size());
 }
 
-QVector<QVector<double>> convertToNumericMatrix(QVector<QVector<QLineEdit*>>& mat, int n)
-{
-    QVector<QVector<double>> numericMatrix(n, QVector<double>(n));
-
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            // Extract numeric values from QLineEdit
-            numericMatrix[i][j] = mat[i][j]->text().toDouble();
-        }
-    }
-    qDebug() << "printing numericMatrix after converting:";
-    MatrixInputWidget::debugPrintDoubleArray(numericMatrix, n);
-
-    return numericMatrix;
-}
-
+//TODO: put this into another class
 /* Recursive function for finding the
    determinant of matrix. n is current
    dimension of mat[][]. */
@@ -146,26 +161,44 @@ double determinantOfMatrix(QVector<QVector<double>>& mat, int n)
 
 
 double MatrixInputWidget::readValuesAndFindDeterminant(QVector<QVector<QLineEdit*>>& mat, int n){
-    QVector<QVector<double>> numericMatrix = convertToNumericMatrix(mat, n);
+    QVector<QVector<double>> numericMatrix = getMatrixValues();
     double determinant = determinantOfMatrix(numericMatrix, n);
     return determinant;
 }
 
 QVector<QVector<double>> MatrixInputWidget::getMatrixValues() const {
-    QVector<QVector<double>> matrix;
-    int size = sizeInput->value();  // Get matrix size
+    int size = matrixCells.size();
+    QVector<QVector<double>> numericMatrix(size, QVector<double>(size));
+
     qDebug() << "Matrix size in getMatrixValues method " << size;
 
     for (int i = 0; i < size; ++i) {
-        QVector<double> row;
         for (int j = 0; j < size; ++j) {
-            bool ok;
-            double value = matrixCells[i][j]->text().toDouble(&ok);
-            row.append(ok ? value : 0.0);  // Default to 0 if conversion fails
+            if (!matrixCells[i][j]) {
+                qDebug() << "Invalid QLineEdit pointer at (" << i << ", " << j << ")";
+                return numericMatrix;  // Exit early on error
+            }
+
+            numericMatrix[i][j] = matrixCells[i][j]->text().toDouble();
         }
-        matrix.append(row);
     }
-    return matrix;
+    qDebug() << "Matrix values in getMatrixValues method ";
+    MatrixInputWidget::debugPrintDoubleArray(numericMatrix, numericMatrix.size());
+    return numericMatrix;
+}
+
+QVector<double> MatrixInputWidget::getRHSValues() const {
+    QVector<double> rhs;
+    int size = rightSideCells.size();
+
+    for (int i = 0; i < size; ++i) {
+        bool ok;
+        double value = rightSideCells[i]->text().toDouble(&ok);
+        rhs.append(ok ? value : 0.0);
+    }
+
+    qDebug() << "RHS values: " << rhs;
+    return rhs;
 }
 
 void MatrixInputWidget::setMatrixValues(QVector<QVector<double>>& m) {
@@ -181,5 +214,18 @@ void MatrixInputWidget::setMatrixValues(QVector<QVector<double>>& m) {
             // Set the text of the QLineEdit to the value from the matrix
             cell->setText(QString::number(m[i][j]));
         }
+    }
+}
+
+void MatrixInputWidget::setRHSValues(QVector<double>& rhs) {
+    int size = rhs.size();
+    if (size != rightSideCells.size()) {
+        qWarning() << "RHS size mismatch!";
+        return;
+    }
+
+    for (int i = 0; i < size; i++) {
+        QLineEdit* cell = rightSideCells[i];
+        cell->setText(QString::number(rhs[i]));
     }
 }
